@@ -75,7 +75,6 @@ for line in credentials:
             for j in range(0, len(links_jahia[key])):
                 result.append((i, 2, links_jahia[key][j], links_wp[key][j]))
             i += 1
-    break
 
 for tup in result:
     line = ','.join([str(x) for x in tup])
