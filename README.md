@@ -21,4 +21,4 @@ Simplement avec la commande:
 ./parser.py fichier_des_sites addresse_du_proxy port_du_proxy
 ```
 
-Le fichier `fichier_liste.csv` est un fichier `.csv` qui, pour notre configuration, contient 6 colonnes.
+`fichier_des_sites` est le fichier contenant les sites a tester. Il doit aussi contenir les informations de connexion pour acceder aux sites.
