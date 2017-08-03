@@ -29,6 +29,9 @@ for line in credentials:
     user = parts[6]
     pwd = parts[7]
 
+    url_jahia = os.popen("curl -s -I " + url_jahia + "| awk '/Location: (.*)/ {print $2}' | tail -n 1").read().strip()
+    url_wp = os.popen("curl -s -I " + url_wp + "| awk '/Location: (.*)/ {print $2}' | tail -n 1").read().strip()
+
     html_jahia = os.popen('wget -qO- ' + url_jahia).read()
     html_wp = os.popen('./aspi.sh ' + proxy + ' ' + str(port) + ' ' + url_wp + ' ' + user + ' ' + pwd).read()
 
