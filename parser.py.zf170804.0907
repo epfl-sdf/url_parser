@@ -6,9 +6,6 @@ import sys
 from bs4 import BeautifulSoup
 from collections import OrderedDict
 
-print("parser.py vers 1.0.1")
-
-
 if len(sys.argv) < 4:
     print("Pas assez d'arguments.")
     print("Syntaxe: ./parser.py fichier_des_sites addresse_du_proxy port_du_proxy")
