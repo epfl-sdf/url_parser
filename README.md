@@ -6,7 +6,7 @@ Parcours une table de paires de sites pour repérer les urls communes.
 ## Récupération du dépôt
 On récupère le dépôt avec:
 ```
-git clone https://github.com/epfl-sdf/url_parser.git
+git clone git@github.com:epfl-sdf/url_parser.git
 ```
 
 ## Installation des outils nécessaires
