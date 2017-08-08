@@ -6,8 +6,9 @@ import sys
 from bs4 import BeautifulSoup
 from collections import OrderedDict
 
-print("parser.py vers 1.0.1")
+from version import __version__
 
+print("parser.py vers " + __version__)
 
 if len(sys.argv) < 4:
     print("Pas assez d'arguments.")
