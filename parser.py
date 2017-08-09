@@ -6,7 +6,14 @@ import sys
 from bs4 import BeautifulSoup
 from collections import OrderedDict
 
-def parse_jahia(url_jahia, soup):
+def get_host(url):
+    parts = url.split('/')
+    if url.startswith('http'):
+        return parts[2]
+    else:
+        return parts[0]
+
+def parse_jahia(host_jahia, soup):
     # Parser la page jahia
     links_jahia = {}
     if soup.body is not None:
@@ -14,16 +21,16 @@ def parse_jahia(url_jahia, soup):
         if menu_div is not None:
             for menu_item in menu_div.findAll('li', {'id' : lambda x : x and x.startswith('dropdown')}):
                 for link in menu_item.findAll('a'):
-                    complete_link = url_jahia + link['href'][1:]
+                    complete_link = host_jahia + link['href']
                     if link['href'].startswith('http://'):
                         complete_link = link['href']
-                    if link.getText() in links_jahia and complete_link not in links_jahia[link.getText()]:
-                        links_jahia[link.getText()].append(complete_link)
+                    if link.getText().strip() in links_jahia and complete_link not in links_jahia[link.getText().strip()]:
+                        links_jahia[link.getText().strip()].append(complete_link)
                     else:
-                        links_jahia[link.getText()] = [complete_link]
+                        links_jahia[link.getText().strip()] = [complete_link]
     return links_jahia
 
-def parse_wp(url_wp, soup):
+def parse_wp(host_wp, soup):
     # Parser la page wordpress
     links_wp = {}
     if soup.body is not None:
@@ -31,13 +38,13 @@ def parse_wp(url_wp, soup):
         if menu_div is not None:
             for menu_item in menu_div.findAll('li', {'id' : lambda x : x and x.startswith('menu-item')}):
                 for link in menu_item.findAll('a'):
-                    complete_link = url_wp + link['href']
+                    complete_link = host_wp + link['href']
                     if link['href'].startswith('http://'):
                         complete_link = link['href']
-                    if link.getText() in links_wp and complete_link not in links_wp[link.getText()]:
-                        links_wp[link.getText()].append(complete_link)
+                    if link.getText().strip() in links_wp and complete_link not in links_wp[link.getText().strip()]:
+                        links_wp[link.getText().strip()].append(complete_link)
                     else:
-                        links_wp[link.getText()] = [complete_link]
+                        links_wp[link.getText().strip()] = [complete_link]
     return links_wp
 
 def add_to_output(url_jahia, url_wp, links_jahia, links_wp):
@@ -53,19 +60,19 @@ def add_to_output(url_jahia, url_wp, links_jahia, links_wp):
             i += 1
     return result
 
-def write_output(output_filename, result):
-    result_file = open(output_filename, 'w')
+def write_output(result_file, result):
     for tup in result:
         line = ','.join([str(x) for x in tup])
         print(line, file=result_file)
-    result_file.close()
 
 def collect_links(url_jahia, url_wp, soup_jahia, soup_wp):
     links_jahia = {}
     links_wp = {}
 
-    links_jahia.update(parse_jahia(url_jahia, soup_jahia))
-    links_wp.update(parse_wp(url_wp, soup_wp))
+    host_jahia = get_host(url_jahia)
+    host_wp = get_host(url_wp)
+    links_jahia.update(parse_jahia(host_jahia, soup_jahia))
+    links_wp.update(parse_wp(host_wp, soup_wp))
 
     return add_to_output(url_jahia, url_wp, links_jahia, links_wp)
 
@@ -76,9 +83,11 @@ def make_mapping():
     credentials = open(sys.argv[1], 'r')
     # Sauter la premiere ligne
     next(credentials)
+    
+    result_file = open('result.csv', 'w')
 
     for line in credentials:
-        parts = line.split(',')
+        parts = line.strip().split(',')
         url_jahia = parts[1]
         url_wp = parts[2]
         user = parts[5]
@@ -90,16 +99,66 @@ def make_mapping():
             url_jahia = new_jahia
         if new_wp != '':
             url_wp = new_wp
-    
+
+        host_jahia = get_host(url_jahia)
+        host_wp = get_host(url_wp)
+
         html_jahia = os.popen('wget -qO- ' + url_jahia).read()
-        html_wp = os.popen('./aspi.sh ' + proxy + ' ' + str(port) + ' ' + url_wp + ' ' + user + ' ' + pwd).read()
+        html_wp = os.popen('./aspi.sh ' + proxy + ' ' + str(port) + ' ' + url_wp + ' ' + user + ' ' + pwd + ' true').read()
     
         soup_jahia = BeautifulSoup(html_jahia, 'html.parser')
         soup_wp = BeautifulSoup(html_wp, 'html.parser')
-    
+        
+        # Detection et verification de langues
+        jahia_lang_other = ""
+        jahia_other_link = ""
+        wp_lang_other = ""
+        wp_other_link = ""
+        languages = soup_jahia.find('ul', {'id' : 'languages'})
+        if languages is not None:
+            for language in languages.findAll('li'):
+                if language.has_attr('class'):
+                    jahia_lang_curr = language.getText().strip().lower()
+                else:
+                    jahia_lang_other = language.getText().strip().lower()
+                    jahia_other_link = host_jahia + language.find('a')['href']
+        languages = soup_wp.find('ul', {'class' : 'language-switcher'})
+        if languages is not None:
+            for language in languages.findAll('li'):
+                if 'current-lang' in language['class']:
+                    wp_lang_curr = language.getText().strip().lower()
+                else:
+                    wp_lang_other = language.getText().strip().lower()
+                    wp_other_link = language.find('a')['href']
+
+        if jahia_lang_curr != wp_lang_curr and jahia_other_link != "":
+            old_url_jahia = url_jahia
+            old_soup_jahia = soup_jahia
+            url_jahia = jahia_other_link
+            html_jahia = os.popen('wget -qO- ' + url_jahia).read()
+            soup_jahia = BeautifulSoup(html_jahia, 'html.parser')
+
         result = collect_links(url_jahia, url_wp, soup_jahia, soup_wp)
 
-        write_output('result.csv', result)
+        if jahia_lang_curr != wp_lang_curr and jahia_other_link != "":
+            url_jahia = old_url_jahia
+            soup_jahia = old_soup_jahia
+        else:
+            url_jahia = jahia_other_link
+            if url_jahia != '':
+                html_jahia = os.popen('wget -qO- ' + url_jahia).read()
+                soup_jahia = BeautifulSoup(html_jahia, 'html.parser')
+
+        if wp_other_link != '':
+            url_wp = wp_other_link
+            html_wp = os.popen('./aspi.sh ' + proxy + ' ' + str(port) + ' ' + url_wp + ' ' + user + ' ' + pwd).read()
+            soup_wp = BeautifulSoup(html_wp, 'html.parser')
+
+        if wp_other_link != '' and jahia_other_link != '':
+            result.extend(collect_links(url_jahia, url_wp, soup_jahia, soup_wp))
+
+        write_output(result_file, result)
+    result_file.close()
 
 if __name__ == "__main__":
     print("parser.py vers 1.0.1")
