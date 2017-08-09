@@ -14,7 +14,7 @@ def parse_jahia(url_jahia, soup):
         if menu_div is not None:
             for menu_item in menu_div.findAll('li', {'id' : lambda x : x and x.startswith('dropdown')}):
                 for link in menu_item.findAll('a'):
-                    complete_link = url_jahia + link['href']
+                    complete_link = url_jahia + link['href'][1:]
                     if link['href'].startswith('http://'):
                         complete_link = link['href']
                     if link.getText() in links_jahia and complete_link not in links_jahia[link.getText()]:
@@ -60,6 +60,14 @@ def write_output(output_filename, result):
         print(line, file=result_file)
     result_file.close()
 
+def collect_links(url_jahia, url_wp, soup_jahia, soup_wp):
+    links_jahia = {}
+    links_wp = {}
+
+    links_jahia.update(parse_jahia(url_jahia, soup_jahia))
+    links_wp.update(parse_wp(url_wp, soup_wp))
+
+    return add_to_output(url_jahia, url_wp, links_jahia, links_wp)
 
 def make_mapping():
     proxy = sys.argv[2]
@@ -71,11 +79,10 @@ def make_mapping():
 
     for line in credentials:
         parts = line.split(',')
-        server = parts[1]
-        url_jahia = parts[2]
-        url_wp = server + parts[4]
-        user = parts[6]
-        pwd = parts[7]
+        url_jahia = parts[1]
+        url_wp = parts[2]
+        user = parts[5]
+        pwd = parts[6]
     
         new_jahia = os.popen("curl -s -I " + url_jahia + "| awk '/Location: (.*)/ {print $2}' | tail -n 1").read().strip()
         new_wp = os.popen("curl -s -I " + url_wp + "| awk '/Location: (.*)/ {print $2}' | tail -n 1").read().strip()
@@ -90,13 +97,7 @@ def make_mapping():
         soup_jahia = BeautifulSoup(html_jahia, 'html.parser')
         soup_wp = BeautifulSoup(html_wp, 'html.parser')
     
-        links_jahia = {}
-        links_wp = {}
-    
-        links_jahia.update(parse_jahia(url_jahia, soup_jahia))
-        links_wp.update(parse_wp(url_wp, soup_wp))
-
-        result = add_to_output(url_jahia, url_wp, links_jahia, links_wp)
+        result = collect_links(url_jahia, url_wp, soup_jahia, soup_wp)
 
         write_output('result.csv', result)
 
