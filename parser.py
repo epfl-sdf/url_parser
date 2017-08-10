@@ -84,6 +84,32 @@ def collect_links(url_jahia, url_wp, soup_jahia, soup_wp):
 
     return add_to_output(url_jahia, url_wp, links_jahia, links_wp)
 
+def find_languages_wp(soup_wp):
+    languages = soup_wp.find('ul', {'class' : 'language-switcher'})
+    wp_lang_curr = ""
+    wp_other_link = ""
+    wp_curr_link = ""
+    if languages is not None:
+        for language in languages.findAll('li'):
+            if 'current-lang' in language['class']:
+                wp_lang_curr = language.getText().strip().lower()
+                wp_curr_link = language.find('a')['href']
+            else:
+                wp_other_link = language.find('a')['href']
+    return (wp_lang_curr, wp_other_link, wp_curr_link)
+
+def find_languages_jahia(soup_jahia, host_jahia):
+    languages = soup_jahia.find('ul', {'id' : 'languages'})
+    jahia_lang_curr = ""
+    jahia_other_link = ""
+    if languages is not None:
+        for language in languages.findAll('li'):
+            if language.has_attr('class'):
+                jahia_lang_curr = language.getText().strip().lower()
+            else:
+                jahia_other_link = host_jahia + language.find('a')['href']
+    return (jahia_lang_curr, jahia_other_link)
+
 def make_mapping():
     proxy = sys.argv[2]
     port = sys.argv[3]
@@ -118,33 +144,21 @@ def make_mapping():
         soup_wp = BeautifulSoup(html_wp, 'html.parser')
         
         # Detection et verification de langues
-        jahia_lang_other = ""
-        jahia_other_link = ""
-        wp_lang_other = ""
-        wp_other_link = ""
-        languages = soup_jahia.find('ul', {'id' : 'languages'})
-        if languages is not None:
-            for language in languages.findAll('li'):
-                if language.has_attr('class'):
-                    jahia_lang_curr = language.getText().strip().lower()
-                else:
-                    jahia_lang_other = language.getText().strip().lower()
-                    jahia_other_link = host_jahia + language.find('a')['href']
-        languages = soup_wp.find('ul', {'class' : 'language-switcher'})
-        if languages is not None:
-            for language in languages.findAll('li'):
-                if 'current-lang' in language['class']:
-                    wp_lang_curr = language.getText().strip().lower()
-                else:
-                    wp_lang_other = language.getText().strip().lower()
-                    wp_other_link = language.find('a')['href']
+        (jahia_lang_curr, jahia_other_link) = find_languages_jahia(soup_jahia, host_jahia)
+        (wp_lang_curr, wp_other_link, wp_curr_link) = find_languages_wp(soup_wp)
+        url_wp = wp_curr_link
 
-        if jahia_lang_curr != wp_lang_curr and jahia_other_link != "":
+        if jahia_other_link != '':
+            html_other_jahia = os.popen('wget -qO- ' + jahia_other_link).read()
+            soup_other_jahia = BeautifulSoup(html_other_jahia, 'html.parser')
+            url_jahia = find_languages_jahia(soup_other_jahia, host_jahia)[1]
+
+        if jahia_lang_curr != wp_lang_curr and jahia_other_link != '':
             old_url_jahia = url_jahia
             old_soup_jahia = soup_jahia
             url_jahia = jahia_other_link
-            html_jahia = os.popen('wget -qO- ' + url_jahia).read()
-            soup_jahia = BeautifulSoup(html_jahia, 'html.parser')
+            html_jahia = html_other_jahia
+            soup_jahia = soup_other_jahia
         
         if jahia_lang_curr != wp_lang_curr:
             if jahia_other_link == "":
@@ -160,8 +174,8 @@ def make_mapping():
         else:
             url_jahia = jahia_other_link
             if url_jahia != '':
-                html_jahia = os.popen('wget -qO- ' + url_jahia).read()
-                soup_jahia = BeautifulSoup(html_jahia, 'html.parser')
+                html_jahia = html_other_jahia
+                soup_jahia = soup_other_jahia
 
         if wp_other_link != '':
             url_wp = wp_other_link
