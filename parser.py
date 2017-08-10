@@ -2,9 +2,11 @@
 
 import os
 import sys
+import logging
 
 from bs4 import BeautifulSoup
 from collections import OrderedDict
+from datetime import datetime
 
 from version import __version__
 
@@ -27,7 +29,9 @@ def parse_jahia(host_jahia, soup):
                     if link['href'].startswith('http://'):
                         complete_link = link['href']
                     if link.getText().strip() in links_jahia and complete_link not in links_jahia[link.getText().strip()]:
-                        links_jahia[link.getText().strip()].append(complete_link)
+                        #links_jahia[link.getText().strip()].append(complete_link)
+                        logging.warning('Un site a plusieurs fois un lien du même nom : ' + link.getText().strip() + ' : ' + complete_link)
+                        links_jahia.pop(link.getText().strip(), None)
                     else:
                         links_jahia[link.getText().strip()] = [complete_link]
     return links_jahia
@@ -44,7 +48,9 @@ def parse_wp(host_wp, soup):
                     if link['href'].startswith('http://'):
                         complete_link = link['href']
                     if link.getText().strip() in links_wp and complete_link not in links_wp[link.getText().strip()]:
-                        links_wp[link.getText().strip()].append(complete_link)
+                        #links_wp[link.getText().strip()].append(complete_link)
+                        logging.warning('Un site a plusieurs fois un lien du même nom: ' + link.getText().strip() + ' : ' + complete_link)
+                        links_wp.pop(link.getText().strip(), None)
                     else:
                         links_wp[link.getText().strip()] = [complete_link]
     return links_wp
@@ -139,6 +145,12 @@ def make_mapping():
             url_jahia = jahia_other_link
             html_jahia = os.popen('wget -qO- ' + url_jahia).read()
             soup_jahia = BeautifulSoup(html_jahia, 'html.parser')
+        
+        if jahia_lang_curr != wp_lang_curr:
+            if jahia_other_link == "":
+                logging.warning('Le site jahia' + url_jahia +' est en ' + jahia_lang_curr + ' mais le WP est en ' + wp_lang_curr + " et le site correspondant jahia n'existe pas")
+            if wp_other_link == "":
+                logging.warning('Le site wp ' + url_wp +' est en ' + wp_lang_curr + ' mais le jahia est en ' + jahia_lang_curr + " et le site correspondant WP n'existe pas")
 
         result = collect_links(url_jahia, url_wp, soup_jahia, soup_wp)
 
@@ -164,6 +176,7 @@ def make_mapping():
 
 if __name__ == "__main__":
     print("parser.py vers " + __version__)
+    logging.basicConfig(filename='warnings-' + str(datetime.now()) + '.log')
 
     if len(sys.argv) < 4:
         print("Pas assez d'arguments.")
