@@ -17,55 +17,55 @@ def get_host(url):
     else:
         return parts[0]
 
-def parse_jahia(host_jahia, soup):
-    # Parser la page jahia
-    links_jahia = {}
-    if soup.body is not None:
-        menu_div = soup.find('div', {'id' : 'main-navigation'})
-        if menu_div is not None:
-            for menu_item in menu_div.findAll('li', {'id' : lambda x : x and x.startswith('dropdown')}):
-                for link in menu_item.findAll('a'):
-                    complete_link = host_jahia + link['href']
-                    if link['href'].startswith('http://'):
-                        complete_link = link['href']
-                    if link.getText().strip() in links_jahia and complete_link not in links_jahia[link.getText().strip()]:
-                        #links_jahia[link.getText().strip()].append(complete_link)
-                        logging.warning('Un site a plusieurs fois un lien du même nom : ' + link.getText().strip() + ' : ' + complete_link)
-                        links_jahia.pop(link.getText().strip(), None)
-                    else:
-                        links_jahia[link.getText().strip()] = [complete_link]
-    return links_jahia
+def parse_jahia(host_jahia, menu):
+    result = {}
+    for menu_item in menu.findAll('li', recursive=False):
+        for link_div in menu_item.findAll('div', {'class', 'pageAction'}, recursive=False):
+            link = link_div.find('a', recursive=False)
+            if link:
+                complete_link = host_jahia + link['href']
+                if link['href'].startswith('http://'):
+                    complete_link = link['href']
+                if link.getText().strip() in result and complete_link not in result[link.getText().strip()]:
+                    #links_jahia[link.getText().strip()].append(complete_link)
+                    logging.warning('Un site a plusieurs fois un lien du même nom : ' + link.getText().strip() + ' : ' + complete_link)
+                    result.pop(link.getText().strip(), None)
+                else:
+                    result[link.getText().strip()] = [complete_link]
+                new_menu = menu_item.find('ul', recursive=False)
+                if new_menu and link.getText().strip() in result:
+                    result[link.getText().strip()].append(parse_jahia(host_jahia, new_menu))
+    return result
 
-def parse_wp(host_wp, soup):
-    # Parser la page wordpress
-    links_wp = {}
-    if soup.body is not None:
-        menu_div = soup.find('ul', {'id' : 'top-menu'})
-        if menu_div is not None:
-            for menu_item in menu_div.findAll('li', {'id' : lambda x : x and x.startswith('menu-item')}):
-                for link in menu_item.findAll('a'):
-                    complete_link = host_wp + link['href']
-                    if link['href'].startswith('http://'):
-                        complete_link = link['href']
-                    if link.getText().strip() in links_wp and complete_link not in links_wp[link.getText().strip()]:
-                        #links_wp[link.getText().strip()].append(complete_link)
-                        logging.warning('Un site a plusieurs fois un lien du même nom: ' + link.getText().strip() + ' : ' + complete_link)
-                        links_wp.pop(link.getText().strip(), None)
-                    else:
-                        links_wp[link.getText().strip()] = [complete_link]
-    return links_wp
+def parse_wp(host_wp, menu):
+    result = {}
+    for menu_item in menu.findAll('li', recursive=False):
+        link = menu_item.find('a', recursive=False)
+        if link:
+            complete_link = host_wp + link['href']
+            if link['href'].startswith('http://'):
+                complete_link = link['href']
+            if link.getText().strip() in result and complete_link not in result[link.getText().strip()]:
+                logging.warning('Un site a plusieurs fois un lien du même nom: ' + link.getText().strip() + ' : ' + complete_link)
+                result.pop(link.getText().strip(), None)
+            else:
+                result[link.getText().strip()] = [complete_link]
+            new_menu = menu_item.find('ul', recrusive=False)
+            if new_menu and link.getText().strip() in result:
+                result[link.getText().strip()].append(parse_wp(host_wp, new_menu))
+    return result
 
-def add_to_output(url_jahia, url_wp, links_jahia, links_wp):
+i = 0
+def add_to_output(url_jahia, url_wp, links_jahia, links_wp, level):
+    global i
     result = []
-    i = 0
-    result.append((i, 1, url_jahia, url_wp))
-    i += 1
     
-    for key in links_jahia:
+    for key, value in links_jahia.items():
         if key in links_wp:
-            for j in range(0, len(links_jahia[key])):
-                result.append((i, 2, links_jahia[key][j], links_wp[key][j]))
+            result.append((i, level, value[0], links_wp[key][0]))
             i += 1
+            if len(value) > 1 and len(links_wp[key]) > 1:
+                result.extend(add_to_output(url_jahia, url_wp, value[1], links_wp[key][1], level + 1))
     return result
 
 def write_output(result_file, result):
@@ -77,12 +77,20 @@ def collect_links(url_jahia, url_wp, soup_jahia, soup_wp):
     links_jahia = {}
     links_wp = {}
 
+    menu_jahia = soup_jahia.find('ul', {'id' : 'jquery_tree'})
+    menu_wp = soup_wp.find('ul', {'class' : 'simple-sitemap-page'})
+    #for c in sitemap_wp.findAll('li', recursive=False):
+    #    if 'current_page_item' not in c['class']:
+    #        menu_wp = c.find('ul')
+
     host_jahia = get_host(url_jahia)
     host_wp = get_host(url_wp)
-    links_jahia.update(parse_jahia(host_jahia, soup_jahia))
-    links_wp.update(parse_wp(host_wp, soup_wp))
+    if menu_jahia:
+        links_jahia.update(parse_jahia(host_jahia, menu_jahia))
+    if menu_wp:
+        links_wp.update(parse_wp(host_wp, menu_wp))
 
-    return add_to_output(url_jahia, url_wp, links_jahia, links_wp)
+    return add_to_output(url_jahia, url_wp, links_jahia, links_wp, 1)
 
 def find_languages_wp(soup_wp):
     languages = soup_wp.find('ul', {'class' : 'language-switcher'})
@@ -111,6 +119,7 @@ def find_languages_jahia(soup_jahia, host_jahia):
     return (jahia_lang_curr, jahia_other_link)
 
 def make_mapping():
+    global i
     proxy = sys.argv[2]
     port = sys.argv[3]
 
@@ -120,10 +129,11 @@ def make_mapping():
     
     result_file = open('result.csv', 'w')
 
+    index = 0
     for line in credentials:
         parts = line.strip().split(',')
-        url_jahia = parts[1]
-        url_wp = parts[2]
+        url_jahia = parts[1].strip('/') + '/sitemap'
+        url_wp = parts[2].strip('/')
         user = parts[5]
         pwd = parts[6]
     
@@ -131,14 +141,22 @@ def make_mapping():
         new_wp = os.popen("curl -s -I " + url_wp + "| awk '/Location: (.*)/ {print $2}' | tail -n 1").read().strip()
         if new_jahia != '':
             url_jahia = new_jahia
+            if not url_jahia.endswith('/sitemap'):
+                url_jahia += '/sitemap'
         if new_wp != '':
             url_wp = new_wp
+        
+        print(str(index) + ' : ' + url_jahia + ' ' + url_wp)
+        index += 1
 
         host_jahia = get_host(url_jahia)
         host_wp = get_host(url_wp)
 
         html_jahia = os.popen('wget -qO- ' + url_jahia).read()
-        html_wp = os.popen('./aspi.sh ' + proxy + ' ' + str(port) + ' ' + url_wp + ' ' + user + ' ' + pwd + ' true').read()
+        if html_jahia == '':
+            url_jahia = url_jahia[:-8] + '/plan-du-site'
+            html_jahia = os.popen('wget -qO- ' + url_jahia).read()
+        html_wp = os.popen('./aspi.sh ' + proxy + ' ' + str(port) + ' ' + url_wp + ' /sitemap ' + user + ' ' + pwd + ' true').read()
     
         soup_jahia = BeautifulSoup(html_jahia, 'html.parser')
         soup_wp = BeautifulSoup(html_wp, 'html.parser')
@@ -179,13 +197,14 @@ def make_mapping():
 
         if wp_other_link != '':
             url_wp = wp_other_link
-            html_wp = os.popen('./aspi.sh ' + proxy + ' ' + str(port) + ' ' + url_wp + ' ' + user + ' ' + pwd).read()
+            html_wp = os.popen('./aspi.sh ' + proxy + ' ' + str(port) + ' ' + url_wp + ' / ' + user + ' ' + pwd).read()
             soup_wp = BeautifulSoup(html_wp, 'html.parser')
 
         if wp_other_link != '' and jahia_other_link != '':
             result.extend(collect_links(url_jahia, url_wp, soup_jahia, soup_wp))
 
         write_output(result_file, result)
+        i = 0
     result_file.close()
 
 if __name__ == "__main__":
