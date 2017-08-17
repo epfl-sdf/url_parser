@@ -7,20 +7,18 @@
 #test si l'argument est vide
 if [ -z "$1" ]
   then
-    echo -e "\nSyntax: ./aspi.sh proxy port url location user passwd new_cookie\n\n"
+    echo -e "\nSyntax: ./aspi.sh url location user passwd new_cookie\n\n"
     exit
 fi
 
-proxy=$1
-port=$2
-site=$3
+site=$1
 login_address="$site/wp-login.php"
-location=$4
-log=$5
-pwd=$6
+location=$2
+log=$3
+pwd=$4
 cookies="cookies.txt"
 agent="Mozilla/5.0"
-new_cookie=$7
+new_cookie=$5
 
 if [ ! -z "$new_cookie" ]
 then

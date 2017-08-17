@@ -120,8 +120,6 @@ def find_languages_jahia(soup_jahia, host_jahia):
 
 def make_mapping():
     global i
-    proxy = sys.argv[2]
-    port = sys.argv[3]
 
     credentials = open(sys.argv[1], 'r')
     # Sauter la premiere ligne
@@ -156,7 +154,7 @@ def make_mapping():
         if html_jahia == '':
             url_jahia = url_jahia[:-8] + '/plan-du-site'
             html_jahia = os.popen('wget -qO- ' + url_jahia).read()
-        html_wp = os.popen('./aspi.sh ' + proxy + ' ' + str(port) + ' ' + url_wp + ' /sitemap ' + user + ' ' + pwd + ' true').read()
+        html_wp = os.popen('./aspi.sh ' + ' ' + url_wp + ' /sitemap ' + user + ' ' + pwd + ' true').read()
     
         soup_jahia = BeautifulSoup(html_jahia, 'html.parser')
         soup_wp = BeautifulSoup(html_wp, 'html.parser')
@@ -198,7 +196,7 @@ def make_mapping():
 
         if wp_other_link != '':
             url_wp = wp_other_link
-            html_wp = os.popen('./aspi.sh ' + proxy + ' ' + str(port) + ' ' + url_wp + ' / ' + user + ' ' + pwd).read()
+            html_wp = os.popen('./aspi.sh ' + ' ' + url_wp + ' / ' + user + ' ' + pwd).read()
             soup_wp = BeautifulSoup(html_wp, 'html.parser')
 
         if wp_other_link != '' and jahia_other_link != '':
@@ -212,9 +210,9 @@ if __name__ == "__main__":
     print("parser.py vers " + __version__)
     logging.basicConfig(filename='warnings-' + str(datetime.now()) + '.log')
 
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 2:
         print("Pas assez d'arguments.")
-        print("Syntaxe: ./parser.py fichier_des_sites addresse_du_proxy port_du_proxy")
+        print("Syntaxe: ./parser.py fichier_des_sites")
         exit(1)
 
     make_mapping()
