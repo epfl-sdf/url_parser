@@ -22,7 +22,7 @@ def parse_jahia(host_jahia, menu):
     for menu_item in menu.findAll('li', recursive=False):
         for link_div in menu_item.findAll('div', {'class', 'pageAction'}, recursive=False):
             link = link_div.find('a', recursive=False)
-            if link:
+            if link and link.has_attr('href'):
                 complete_link = host_jahia + link['href']
                 if link['href'].startswith('http://'):
                     complete_link = link['href']
@@ -178,12 +178,13 @@ def make_mapping():
             html_jahia = html_other_jahia
             soup_jahia = soup_other_jahia
         
+        '''
         if jahia_lang_curr != wp_lang_curr:
             if jahia_other_link == "":
                 logging.warning('Le site jahia' + url_jahia +' est en ' + jahia_lang_curr + ' mais le WP est en ' + wp_lang_curr + " et le site correspondant jahia n'existe pas")
             if wp_other_link == "":
                 logging.warning('Le site wp ' + url_wp +' est en ' + wp_lang_curr + ' mais le jahia est en ' + jahia_lang_curr + " et le site correspondant WP n'existe pas")
-
+        '''
         result = collect_links(url_jahia, url_wp, soup_jahia, soup_wp)
 
         if jahia_lang_curr != wp_lang_curr and jahia_other_link != "":
