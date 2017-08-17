@@ -18,7 +18,7 @@ Simplement avec la commande:
 ## Lancer le vérificateur
 Simplement avec la commande:
 ```
-./parser.py fichier_des_sites addresse_du_proxy port_du_proxy
+./parser.py fichier_des_sites
 ```
 
 `fichier_des_sites` est le fichier contenant les sites a tester. Il doit aussi contenir les informations de connexion pour acceder aux sites.
