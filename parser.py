@@ -162,7 +162,8 @@ def make_mapping():
         # Detection et verification de langues
         (jahia_lang_curr, jahia_other_link) = find_languages_jahia(soup_jahia, host_jahia)
         (wp_lang_curr, wp_other_link, wp_curr_link) = find_languages_wp(soup_wp)
-        url_wp = wp_curr_link
+        if wp_curr_link != '':
+            url_wp = wp_curr_link
 
         if jahia_other_link != '':
             html_other_jahia = os.popen('wget -qO- ' + jahia_other_link).read()
@@ -176,6 +177,16 @@ def make_mapping():
             html_jahia = html_other_jahia
             soup_jahia = soup_other_jahia
         
+        if jahia_lang_curr == '':
+            logging.warning("Le site jahia " + url_jahia + " n'a pas de langue ou ne se charge pas correctement)")
+        if wp_lang_curr == '':
+            logging.warning("Le site wp " + url_wp + " n'a pas de langue ou ne se charge pas correctement")
+        if jahia_lang_curr != wp_lang_curr and jahia_lang_curr != '' and wp_lang_curr != '':
+            if jahia_other_link == '':
+                logging.warning('Le site jahia ' + url_jahia + ' est en ' + jahia_lang_curr + ' mais le WP est en ' + wp_lang_curr + " et le site corrsepondant jahia n'existe pas")
+            if wp_other_link == '':
+                logging.warning('Le site wp ' + url_wp + ' est en ' + wp_lang_curr + ' mais le jahia est en ' + jahia_lang_curr + " et le site corrsepondant wp n'existe pas")
+
         '''
         if jahia_lang_curr != wp_lang_curr:
             if jahia_other_link == "":
