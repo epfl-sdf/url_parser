@@ -3,6 +3,7 @@
 import os
 import sys
 import logging
+import argparse
 
 from bs4 import BeautifulSoup
 from collections import OrderedDict
@@ -277,14 +278,18 @@ def make_mapping():
         i = 0
     result_file.close()
 
+def get_parser():
+    parser = argparse.ArgumentParser(description='Parser des liens sur les sites Jahia et Wordpress.')
+    parser.add_argument('ficher_des_sites', help='le fichier contenant les sites a parser.')
+    parser.add_argument('-v', '--version', help='affiche la version du parser',
+                        action='version', version='%(prog)s ' + __version__)
+    return parser
+
 if __name__ == "__main__":
-    print("parser.py vers " + __version__)
+    parser = get_parser()
+    args = parser.parse_args()
     logging.basicConfig(filename='warnings-' + str(datetime.now()) + '.log')
 
-    if len(sys.argv) < 2:
-        print("Pas assez d'arguments.")
-        print("Syntaxe: ./parser.py fichier_des_sites")
-        exit(1)
-
+    print('url_parser version ' + __version__)
     make_mapping()
 
