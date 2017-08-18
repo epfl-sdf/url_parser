@@ -27,7 +27,6 @@ def parse_jahia(host_jahia, menu):
                 if link['href'].startswith('http://'):
                     complete_link = link['href']
                 if link.getText().strip() in result and complete_link not in result[link.getText().strip()]:
-                    #links_jahia[link.getText().strip()].append(complete_link)
                     logging.warning('Un site a plusieurs fois un lien du même nom : ' + link.getText().strip() + ' : ' + complete_link)
                     result.pop(link.getText().strip(), None)
                 else:
@@ -79,9 +78,6 @@ def collect_links(url_jahia, url_wp, soup_jahia, soup_wp):
 
     menu_jahia = soup_jahia.find('ul', {'id' : 'jquery_tree'})
     menu_wp = soup_wp.find('ul', {'class' : 'simple-sitemap-page'})
-    #for c in sitemap_wp.findAll('li', recursive=False):
-    #    if 'current_page_item' not in c['class']:
-    #        menu_wp = c.find('ul')
 
     host_jahia = get_host(url_jahia)
     host_wp = get_host(url_wp)
@@ -125,7 +121,7 @@ def make_mapping():
     # Sauter la premiere ligne
     next(credentials)
     
-    result_file = open('result.csv', 'w')
+    result_file = open('result-' + str(datetime.now()) + '.csv', 'w')
 
     index = 0
     for line in credentials:
@@ -187,13 +183,6 @@ def make_mapping():
             if wp_other_link == '':
                 logging.warning('Le site wp ' + url_wp + ' est en ' + wp_lang_curr + ' mais le jahia est en ' + jahia_lang_curr + " et le site corrsepondant wp n'existe pas")
 
-        '''
-        if jahia_lang_curr != wp_lang_curr:
-            if jahia_other_link == "":
-                logging.warning('Le site jahia' + url_jahia +' est en ' + jahia_lang_curr + ' mais le WP est en ' + wp_lang_curr + " et le site correspondant jahia n'existe pas")
-            if wp_other_link == "":
-                logging.warning('Le site wp ' + url_wp +' est en ' + wp_lang_curr + ' mais le jahia est en ' + jahia_lang_curr + " et le site correspondant WP n'existe pas")
-        '''
         result = collect_links(url_jahia, url_wp, soup_jahia, soup_wp)
 
         if jahia_lang_curr != wp_lang_curr and jahia_other_link != "":
