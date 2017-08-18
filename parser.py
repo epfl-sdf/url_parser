@@ -121,7 +121,7 @@ def make_mapping():
     # Sauter la premiere ligne
     next(credentials)
     
-    result_file = open('result-' + str(datetime.now()) + '.csv', 'w')
+    result_file = open('result.csv', 'w')
 
     index = 0
     for line in credentials:
