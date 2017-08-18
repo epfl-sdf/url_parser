@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import os
-import sys
 import logging
 import argparse
 
@@ -164,17 +163,17 @@ def find_languages_jahia(soup_jahia, host_jahia):
                 jahia_other_link = host_jahia + language.find('a')['href']
     return (jahia_lang_curr, jahia_other_link)
 
-def make_mapping():
+def make_mapping(args):
     """
     Crée le mapping entre les pages Jahia et les pages WP pour tous les sites.
     """
     global i
 
-    credentials = open(sys.argv[1], 'r')
+    credentials = open(args.ficher_des_sites, 'r')
     # Sauter la premiere ligne (les noms des colonnes)
     next(credentials)
     
-    result_file = open('result-' + str(datetime.now()) + 'w')
+    result_file = open('result-' + str(datetime.now()) + '.csv' , 'w')
 
     index = 0
     for line in credentials:
@@ -295,5 +294,5 @@ if __name__ == "__main__":
     logging.basicConfig(filename='warnings-' + str(datetime.now()) + '.log')
 
     print('url_parser version ' + __version__)
-    make_mapping()
+    make_mapping(args)
 
