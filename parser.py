@@ -14,7 +14,7 @@ from version import __version__
 i = 0
 
 def get_host(url):
-""" Obtiens seulement la partie host d'un url """
+    """ Obtiens seulement la partie host d'un url """
     parts = url.split('/')
     if url.startswith('http'):
         return parts[2]
@@ -173,7 +173,7 @@ def make_mapping():
     # Sauter la premiere ligne (les noms des colonnes)
     next(credentials)
     
-    result_file = open('result-' + str(datetime.now()) 'w')
+    result_file = open('result-' + str(datetime.now()) + 'w')
 
     index = 0
     for line in credentials:
