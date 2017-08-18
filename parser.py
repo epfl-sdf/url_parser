@@ -279,6 +279,7 @@ def make_mapping():
     result_file.close()
 
 def get_parser():
+    """ Obtiens un parser les arguments de ligne de commande. """
     parser = argparse.ArgumentParser(description='Parser des liens sur les sites Jahia et Wordpress.')
     parser.add_argument('ficher_des_sites', help='le fichier contenant les sites a parser.')
     parser.add_argument('-v', '--version', help='affiche la version du parser',
@@ -286,8 +287,11 @@ def get_parser():
     return parser
 
 if __name__ == "__main__":
+    # Parser des arguments des lignes de commande.
     parser = get_parser()
     args = parser.parse_args()
+
+    # Active le logging dans le fichier précisé en argument.
     logging.basicConfig(filename='warnings-' + str(datetime.now()) + '.log')
 
     print('url_parser version ' + __version__)
