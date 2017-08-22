@@ -1,5 +1,5 @@
 # url_parser
-Le but de ce logiciel est de créer un mapping entre les URL Jahia et les url
+Le but de ce logiciel est de créer un mapping entre les URL Jahia et les URL
 WordPress. Pour notre travail de test, il serait utile de non seulement avoir
 le mapping des URL Jahia et WordPress des pages principales de chaque site
 mais aussi de tous les sous pages de chaque site. Ce logiciel est utilisé
@@ -46,25 +46,25 @@ ce script marche correctement, il faut au moins les colonnes suivantes:
 * Sixième colonne: le username utilisé pour se connecter sur le site WordPress
 * Septième colonne: le mot de passe utilisé pour se connecter sur le site WordPress
 
-Le script va alors écrire dans au moins un fichier: `result-[date].csv` ou `[date]`
+Le script va alors écrire dans au moins un fichier: `result-[date].csv` où `[date]`
 est la date et l'heure à laquelle le script est lancé. Ce fichier sera également
 un fichier .csv dont les colonnes sont séparées par des virgules. Les colonnes de
 ce fichier sont les suivantes:
 * l'index de la sous page, elle montre l'ordre avec lequel le script a trouvé les
-  liens sur le site.
+  liens sur le site
 * le niveau de la page sur le site qui corréspond au niveau de cette page dans la
-  hierarche du plan-du-site du site en question.
+  hierarche du plan-du-site du site en question
 * l'URL Jahia de la page
 * l'URL WordPress de la page
 
 De plus, le script peut créer un autre fichier qui s'apelle `warnings-[date].log`.
 Dans ce fichier, on retrouve des problèmes que le script a encontré pendant son
 execution. Il y a 3 types de problèmes:
-* Si un site n'a pas pu être chargé correctement, il sera signalé içi.
-* Si une langue manque sur un site alors qu'elle est présente sur l'autre CMS
-* Si dans le même niveau de la hiérarchie des sous-pages il y a deux liens ou plus
+* Un site n'a pas pu être chargé correctement
+* Une langue manque sur un site alors qu'elle est présente sur l'autre CMS
+* Dans le même niveau de la hiérarchie des sous-pages il y a deux liens ou plus
   qui ont le même nom. Dans ce cas, le script n'est pas capable de les différencier
-  et ne peux pas faire de mapping.
+  et ne peux pas faire de mapping
 
 Il est aussi possible de lancer le logiciel avec les options suivantes:
 * `-h --help` pour affichier une petite aide sur comment lancer le logiciel
@@ -83,7 +83,7 @@ Pour cela, on utilise les plan-du-site présentes sur les sites afin d'avoir tou
 les sous-pages du site. De plus, on charge le site dans toutes les langues possibles
 et on fait les liens avec les sous-pages dans les mêmes langues.
 
-Les sites sont chargé directement avec la commande `wget`. On utilise cette commande
+Les sites sont chargés directement avec la commande `wget`. On utilise cette commande
 directement au lieu d'une librairie car on utlise aussi un script bash `aspi.sh`
 qui utilise `wget` également. Ceci est nécessaire car pour acceder aux sites Wordpress,
 il faut se connecter. Le script `aspi.sh` se connecte donc sur les sites WordPress
