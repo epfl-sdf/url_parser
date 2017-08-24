@@ -10,13 +10,13 @@ git clone git@github.com:epfl-sdf/url_parser.git
 ```
 
 ## Installation des outils nécessaires
-Simplement avec la commande:
+On les installe simplement avec la commande:
 ```
 ./install.sh
 ```
 
 ## Lancer le vérificateur
-Simplement avec la commande:
+On le lance simplement avec la commande:
 ```
 ./parser.py fichier_des_sites
 ```
