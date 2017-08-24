@@ -70,7 +70,7 @@ Il est aussi possible de lancer le logiciel avec les options suivantes:
 * `-h --help` pour affichier une petite aide sur comment lancer le logiciel
 * `-v --version` pour afficher le numéro de version du script
 
-# Expliquation du logiciel
+# Explication du logiciel
 
 Ce logiciel sert a faire un mapping entre tout les pages Jahia et WordPress.
 De base, nous avons une liste qui lie les pages principales des sites Jahia et
