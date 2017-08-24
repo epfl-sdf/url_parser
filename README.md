@@ -21,4 +21,4 @@ Simplement avec la commande:
 ./parser.py fichier_des_sites
 ```
 
-`fichier_des_sites` est le fichier contenant les sites a tester. Il doit aussi contenir les informations de connexion pour acceder aux sites.
+`fichier_des_sites` est le fichier contenant les sites à tester. Il doit aussi contenir les informations de connexion pour acceder aux sites.
